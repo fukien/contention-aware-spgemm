@@ -1,4 +1,4 @@
-# Algorithm and placement options inherited from CASMM.
+# Algorithm and memory-placement options.
 if(USE_HUGE)
 	add_definitions(-DUSE_HUGE)
 endif()
@@ -43,7 +43,7 @@ if(USE_NVM)
 endif()
 
 
-add_definitions(-DRMAT_DIR="dataset/rmat")
+add_definitions(-DRMAT_DIR="dataset")
 
 if(LOCAL_NUMA_NODE_IDX)
 	add_definitions(-DLOCAL_NUMA_NODE_IDX=${LOCAL_NUMA_NODE_IDX})

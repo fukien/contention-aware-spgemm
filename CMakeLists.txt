@@ -26,7 +26,7 @@ find_path(PMEM_INCLUDE_DIR libpmem.h REQUIRED)
 
 set(THREAD_NUM 32 CACHE STRING "Worker threads")
 set(AMS_HIGH_THREAD_NUM 4 CACHE STRING "Workers for high-contention bins")
-set(RUN_NUM 2 CACHE STRING "Iterations including warmup")
+set(RUN_NUM 10 CACHE STRING "Iterations including warmup")
 
 if(THREAD_NUM LESS 2 OR AMS_HIGH_THREAD_NUM LESS 1 OR AMS_HIGH_THREAD_NUM GREATER_EQUAL THREAD_NUM)
     message(FATAL_ERROR "Require THREAD_NUM >= 2 and 1 <= AMS_HIGH_THREAD_NUM < THREAD_NUM")
@@ -40,11 +40,17 @@ set(CORE_NUM 64 CACHE STRING "Physical cores across sockets")
 set(SOCKET_CORE_NUM 32 CACHE STRING "Physical cores per socket")
 set(CXL_NUMA_NODE_IDX 3 CACHE STRING "CXL node ID plus one")
 set(LAST_NUMA_NODE_IDX 3 CACHE STRING "Last node ID plus one")
-set(CFG_PATH "${PROJECT_SOURCE_DIR}/config/mc/mxc.cfg" CACHE FILEPATH "CPU topology config")
+set(CFG_PATH "${PROJECT_SOURCE_DIR}/config/mc/mxc0.cfg" CACHE FILEPATH "CPU topology config")
 
 get_filename_component(CFG_PATH "${CFG_PATH}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
 if(NOT EXISTS "${CFG_PATH}")
-    message(FATAL_ERROR "CPU topology config does not exist: ${CFG_PATH}")
+	if(CFG_PATH STREQUAL "${PROJECT_SOURCE_DIR}/config/mc/mxc.cfg")
+		# Migrate build directories configured before mxc.cfg was removed.
+		set(CFG_PATH "${PROJECT_SOURCE_DIR}/config/mc/mxc0.cfg" CACHE FILEPATH "CPU topology config" FORCE)
+		message(STATUS "Migrating removed mxc.cfg setting to config/mc/mxc0.cfg")
+	else()
+		message(FATAL_ERROR "CPU topology config does not exist: ${CFG_PATH}")
+	endif()
 endif()
 
 add_compile_options(-Wall -Wextra -march=native -UNDEBUG)
@@ -86,10 +92,8 @@ foreach(algo ams_hashspgemm ams_hserscspgemm ams_hybaccspgemm)
     target_link_libraries(${algo} PRIVATE Ams)
 endforeach()
 
-foreach(tool rmat_load rmat_ones)
-    add_executable(${tool} src/${tool}.c)
-    target_link_libraries(${tool} PRIVATE Mm)
-endforeach()
+add_executable(rmat_ones src/rmat_ones.c)
+target_link_libraries(rmat_ones PRIVATE Mm)
 
 # PaRMAT remains independently buildable through its original Release/makefile.
 option(BUILD_PARMAT "Also build the bundled R-MAT generator" OFF)
