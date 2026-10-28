@@ -607,3 +607,7 @@ TSWLatexianTemp*
 logs/*/*.clusters
 !logs/*/*.log
 *.pptx
+# Generated binaries and experiment inputs
+/bin/
+/dataset/
+/work/
